@@ -16,11 +16,12 @@ const SpliteGenerator::Entry& SpliteGenerator::store(
     max_x = 0;
   }
 
-  IRect rect(max_x, 0, size.width(), size.height());
-  FRect uv_rect((float)max_x / (float)capacity_.width(),
-                (float)0 / (float)capacity_.height(),
-                (float)size.width() / (float)capacity_.width(),
-                (float)size.height() / (float)capacity_.height());
+  IRect rect = IRect::createLTWH(max_x, 0, size.width(), size.height());
+  FRect uv_rect = FRect::createLTWH(
+      (float)max_x / (float)capacity_.width(),
+      (float)0 / (float)capacity_.height(),
+      (float)size.width() / (float)capacity_.width(),
+      (float)size.height() / (float)capacity_.height());
 
   Entry entry(rect, uv_rect, result);
   auto [it, _] = map_.insert(std::make_pair(key, entry));

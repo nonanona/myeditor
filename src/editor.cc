@@ -30,37 +30,56 @@ void Editor::init(float text_size_pt) {
 }
 
 bool Editor::onKeyEvent(const KeyEvent& key) {
-  if (key.hasModifier()) {
+  if (key.hasModifier(Modifier::CTRL)) {
     return performEditorCommands(key);
   }
 
   if (isascii((int)key.keysym)) {
     uint32_t tail = text_.lengthInCodePoints();
-    text_.replace(Range(cursor_offset_, cursor_offset_),
+    text_.replace(selection_.toRange(),
                   std::vector<uint32_t>({static_cast<uint32_t>(key.keysym)}));
-    cursor_offset_++;
+    selection_.move(1, text_.code_points().size());
   } else if (key.keysym == KeySymbol::KEY_BACKSPACE) {
-    if (cursor_offset_ != 0) {
-      text_.replace(Range(cursor_offset_ - 1, cursor_offset_),
-                    std::vector<uint32_t>());
-      cursor_offset_ = cursor_offset_ == 0 ? 0 : cursor_offset_ - 1;
+    if (selection_.isCollapsed()) {
+      if (selection_.start() != 0) {
+        text_.replace(Range(selection_.start() - 1, selection_.start()),
+                      std::vector<uint32_t>());
+        selection_.move(-1, text_.code_points().size());
+      }
+    } else {
+      text_.replace(selection_.toRange(), std::vector<uint32_t>());
     }
   } else if (key.keysym == KeySymbol::KEY_DELETE) {
-    if (cursor_offset_ != text_.code_points().size()) {
-      text_.replace(Range(cursor_offset_, cursor_offset_ + 1),
-                    std::vector<uint32_t>());
+    if (selection_.isCollapsed()) {
+      if (selection_.start() != text_.code_points().size()) {
+        text_.replace(Range(selection_.start(), selection_.end() + 1),
+                      std::vector<uint32_t>());
+      }
+    } else {
+      text_.replace(selection_.toRange(), std::vector<uint32_t>());
     }
   } else if (isArrowKey(key.keysym)) {
     // Handle grapheme clusters.
+    const bool hasShift = key.hasModifier(Modifier::SHIFT);
     switch (key.keysym) {
       case KeySymbol::KEY_LEFT:
-        if (cursor_offset_ != 0) {
-          cursor_offset_--;
+        if (hasShift) {
+          selection_.extend(-1, 0, text_.code_points().size());
+        } else {
+          if (!selection_.isCollapsed()) {
+            selection_.collapseToStart();  // opposit in RTL?
+          }
+          selection_.move(-1, text_.code_points().size());
         }
         break;
       case KeySymbol::KEY_RIGHT:
-        if (cursor_offset_ != text_.code_points().size()) {
-          cursor_offset_++;
+        if (hasShift) {
+          selection_.extend(0, 1, text_.code_points().size());
+        } else {
+          if (!selection_.isCollapsed()) {
+            selection_.collapseToEnd();
+          }
+          selection_.move(1, text_.code_points().size());
         }
         break;
       case KeySymbol::KEY_UP:
@@ -77,7 +96,7 @@ bool Editor::onKeyEvent(const KeyEvent& key) {
 }
 
 void Editor::onDraw() {
-  renderer_.renderText(text_, cursor_offset_);
+  renderer_.renderText(text_, selection_);
 }
 
 void Editor::onCursorDraw() {
@@ -85,14 +104,13 @@ void Editor::onCursorDraw() {
 }
 
 void Editor::insertText(const std::vector<uint32_t>& code_points) {
-  text_.replace(Range(cursor_offset_, cursor_offset_), code_points);
-  cursor_offset_ += code_points.size();
+  text_.replace(selection_.toRange(), code_points);
+  selection_.move(code_points.size(), text_.code_points().size());
   text_.dump();
 }
 
 bool Editor::performEditorCommands(const KeyEvent& key) {
-  if (key.isModifier(Modifier::CTRL) &&
-      (key.keysym == KeySymbol::KEY_V || key.keysym == KeySymbol::KEY_v)) {
+  if (key.keysym == KeySymbol::KEY_V || key.keysym == KeySymbol::KEY_v) {
     requestClipboardText(
         [=](const std::string& text) { insertText(utf8ToCodePoints(text)); });
   }

@@ -9,6 +9,7 @@
 #include "rect.h"
 #include "rect_shader.h"
 #include "shaper.h"
+#include "selection.h"
 #include "view.h"
 
 class TextRenderer {
@@ -28,14 +29,15 @@ class TextRenderer {
   ~TextRenderer() {}
 
   void init(float textSizePx);
-  void renderText(const Text& text, uint32_t cursor_pos);
+  void renderText(const Text& text, const Selection& selection);
   void onCursorDraw();
 
  private:
   void renderTextInternal();
   void drawHelperLines();
   void drawHorizontalLines(float base_line, float line_top, float line_bottom);
-  std::pair<float, float> metricsForLine(const line_breaker::Line& line);
+  IRect getCursorRect(uint32_t offset);
+  std::vector<IRect> getSelectionBoxes(uint32_t start, uint32_t end);
 
   EGLDisplay display_;
   EGLContext context_;
@@ -60,8 +62,9 @@ class TextRenderer {
   Text text_;
   std::vector<line_breaker::Line> last_shape_result_;
 
-  // Cursors
-  uint32_t cursor_offset_ = 0;
+  // Copy of selection
+  Selection selection_;
+  std::vector<IRect> selection_boxes_;
   IRect cursor_rect_;
   bool cursor_visible_ = false;
 };

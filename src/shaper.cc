@@ -89,7 +89,9 @@ std::pair<std::vector<Shaper::Result>, bool> Shaper::shape(
                                  code_points.size(), start_offset, run.length);
         hb_buffer_guess_segment_properties(buf.get());
 
-        hb_shape(run.font.font.get(), buf.get(), nullptr /* feature */, 0);
+        std::vector<hb_feature_t> features;
+
+        hb_shape(run.font.font.get(), buf.get(), features.empty() ? nullptr : &features[0], features.size());
         uint32_t num_glyphs = hb_buffer_get_length(buf.get());
         hb_glyph_info_t* infos = hb_buffer_get_glyph_infos(buf.get(), nullptr);
         hb_glyph_position_t* positions =
@@ -99,7 +101,7 @@ std::pair<std::vector<Shaper::Result>, bool> Shaper::shape(
           hb_glyph_extents_t ext = {};
           if (hb_font_get_glyph_extents(run.font.font.get(), infos[i].codepoint,
                                         &ext)) {
-            results.emplace_back(run.font, infos[i].codepoint,
+            results.emplace_back(run.font, infos[i].codepoint, infos[i].cluster,
                                  roundf(HBFixedToFloat(positions[i].x_advance)),
                                  roundf(HBFixedToFloat(positions[i].y_advance)),
                                  roundf(HBFixedToFloat(positions[i].x_offset)),
@@ -111,7 +113,7 @@ std::pair<std::vector<Shaper::Result>, bool> Shaper::shape(
           } else {
             IRect rect =
                 rasterizer.bbox(run.font, infos[i].codepoint, text_size_);
-            results.emplace_back(run.font, infos[i].codepoint,
+            results.emplace_back(run.font, infos[i].codepoint, infos[i].cluster,
                                  roundf(HBFixedToFloat(positions[i].x_advance)),
                                  roundf(HBFixedToFloat(positions[i].y_advance)),
                                  roundf(HBFixedToFloat(positions[i].x_offset)),
@@ -125,13 +127,15 @@ std::pair<std::vector<Shaper::Result>, bool> Shaper::shape(
     }
   }
   return std::make_pair(results, res.paraIsRtl);
-  ;
 }
 
 std::string Shaper::Result::toString() const {
   char buf[64] = {};
   std::string out = "Shaper::Result{";
   snprintf(buf, 64, "glyph ID: %d", glyph_id_);
+  out += buf;
+  out += ", ";
+  snprintf(buf, 64, "Cluster Index: %d", cluster_idx_);
   out += buf;
   out += ", ";
   snprintf(buf, 64, "advance: (%g, %g)", x_advance_, y_advance_);

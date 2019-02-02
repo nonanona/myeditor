@@ -6,6 +6,7 @@
 #include <GLES2/gl2.h>
 
 #include "keyevent.h"
+#include "selection.h"
 #include "text_renderer.h"
 #include "view.h"
 #include "window.h"
@@ -33,7 +34,7 @@ class Editor {
   Text text_;
   TextRenderer renderer_;
   FSize dpi_;
-  uint32_t cursor_offset_ = 0;
+  Selection selection_;
 
   EditorWindow* window_;  // TODO: introduce WindowController
 };

@@ -22,8 +22,12 @@ void GlyphShader::init() {
       "uniform sampler2D texture;"
       "varying mediump vec2 vary_uv;"
       "void main() {"
-      "    gl_FragColor = 1.0 - vec4(1.0, 1.0, 1.0, 1.0) * texture2D(texture, "
-      "vary_uv).r;"
+      "    mediump vec4 colour = texture2D(texture, vary_uv);"
+      "    if (colour.r > 0.1) {"
+      "      gl_FragColor = 1.0 - colour;"
+      "    } else {"
+      "      discard;"
+      "    }"
       "}";
 
   shader_program_ =

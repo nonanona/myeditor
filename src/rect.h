@@ -84,9 +84,16 @@ class Size {
 template <typename T>
 class Rect {
  public:
-  Rect(T x, T y, T w, T h) : pos_(x, y), size_(w, h) {}
   Rect(const Point<T>& pos, const Size<T>& size) : pos_(pos), size_(size) {}
   Rect() : pos_(0, 0), size_(0, 0) {}
+
+  static Rect<T> createLTRB(T l, T t, T r, T b) {
+    return Rect<T>(Point<T>(l, t), Size<T>(r - l, b - t));
+  }
+
+  static Rect<T> createLTWH(T l, T t, T w, T h) {
+    return Rect<T>(Point<T>(l, t), Size<T>(w, h));
+  }
 
   T l() const { return pos_.x(); }
   T t() const { return pos_.y(); }
@@ -105,6 +112,17 @@ class Rect {
     pos_ = pos;
     size_ = size;
   }
+
+  void setLTWH(T l, T t, T w, T h) {
+    pos_ = Point<T>(l, t);
+    size_ = Size<T>(w, h);
+  }
+
+  void setLTRB(T l, T t, T r, T b) {
+    pos_ = Point<T>(l, t);
+    size_ = Size<T>(r - l, b - t);
+  }
+
   void set_l(T l) { pos_.set_x(l); }
   void set_t(T t) { pos_.set_y(t); }
   void set_width(T w) { size_.set_width(w); }
@@ -120,6 +138,26 @@ class Rect {
     std::stringstream ss;
     ss << l() << "," << t() << "-" << width() << "x" << height();
     return ss.str();
+  }
+
+  void unionWith(const Rect<T>& o) {
+    setLTRB(std::min(l(), o.l()), std::min(t(), o.t()), std::max(r(), o.r()), std::max(b(), o.b()));
+  }
+
+  static Rect<T> makeUnion(const Rect<T>& x, const Rect<T>& y) {
+    return Rect<T>::createLTRB(
+        std::min(x.l(), y.l()),
+        std::min(x.t(), y.t()),
+        std::max(x.r(), y.r()),
+        std::max(x.b(), y.b()));
+  }
+
+  static Rect<T> makeIntersection(const Rect<T>& x, const Rect<T>& y) {
+    return Rect<T>::createLTRB(
+        std::max(x.l(), y.l()),
+        std::max(x.t(), y.t()),
+        std::min(x.r(), y.r()),
+        std::min(x.b(), y.b()));
   }
 
  private:

@@ -19,6 +19,7 @@ class Shaper {
   struct Result {
     Result(const FontFallback::Font& font,
            uint32_t glyph_id,
+           uint32_t cluster_idx_,
            float x_advance,
            float y_advance,
            float x_offset,
@@ -29,6 +30,7 @@ class Shaper {
            float height)
         : font_(font),
           glyph_id_(glyph_id),
+          cluster_idx_(cluster_idx_),
           x_advance_(x_advance),
           y_advance_(y_advance),
           x_offset_(x_offset),
@@ -40,6 +42,7 @@ class Shaper {
 
     const FontFallback::Font& font_;
     uint32_t glyph_id_;
+    uint32_t cluster_idx_;
     float x_advance_;
     float y_advance_;
     float x_offset_;
@@ -56,6 +59,8 @@ class Shaper {
   ~Shaper() {}
 
   void init(float text_size);
+
+  float textSize() const { return text_size_; }
 
   std::pair<std::vector<Result>, bool> shape(const std::vector<uint32_t>& text,
                                              Range range,

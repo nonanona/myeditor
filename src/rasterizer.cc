@@ -90,14 +90,6 @@ A8Bitmap Rasterizer::rasterize(const FontFallback::Font& font,
   int width = ceil(FTPosToFloat(bbox.xMax - bbox.xMin));
   int height = ceil(FTPosToFloat(bbox.yMax - bbox.yMin));
 
-  if (Option::get().isVerboseMode()) {
-    printf("FT BBox : %g(%d),%g(%d) - %g(%d),%g(%d), %g(%d)x%g(%d)\n",
-           FTPosToFloat(bbox.xMin), left, FTPosToFloat(bbox.yMin), top,
-           FTPosToFloat(bbox.xMax), right, FTPosToFloat(bbox.yMax), bottom,
-           FTPosToFloat(bbox.xMax - bbox.xMin), width,
-           FTPosToFloat(bbox.yMax - bbox.yMin), height);
-  }
-
   A8Bitmap res(width, height);
 
   FT_Bitmap target = {};

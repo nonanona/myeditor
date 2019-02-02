@@ -34,6 +34,13 @@ std::vector<Line> breakToLines(const Shaper& shaper,
 
   for (Range paraRange : split(code_points, '\n')) {
     if (paraRange.empty()) {
+      Line emptyLine;
+      emptyLine.isRtl = false;
+      emptyLine.startOffset = 0;
+      FontFallback::Font::Metrics metrics =
+          shaper.defaultFont().metrics(shaper.textSize());
+      emptyLine.ascent = metrics.ascender;
+      emptyLine.descent = metrics.descender;
       result.push_back(Line());
       continue;
     }
@@ -44,19 +51,32 @@ std::vector<Line> breakToLines(const Shaper& shaper,
         shaper.shape(code_points, paraRange, rasterizer, false);
 
     currentLine.isRtl = isParaRtl;
+    currentLine.startOffset = paraRange.start();
+    currentLine.ascent = 0;
+    currentLine.descent = 0;
     for (const Shaper::Result& r : glyphs) {
       if (remainingWidth < r.x_advance_) {
         // No more characters. break line
+        currentLine.endOffset = r.cluster_idx_;
         result.push_back(currentLine);
+
+        // Prepare next line
         currentLine = Line();
         currentLine.isRtl = isParaRtl;
+        currentLine.startOffset = r.cluster_idx_;
         remainingWidth = width;
       }
       currentLine.glyphs.push_back(r);
+
+      FontFallback::Font::Metrics metrics = r.font_.metrics(shaper.textSize());
+      currentLine.ascent = std::max(metrics.ascender, currentLine.ascent);
+      currentLine.descent = std::min(metrics.descender, currentLine.descent);
       remainingWidth -= r.x_advance_;
     }
+    currentLine.endOffset = paraRange.end();
     result.push_back(currentLine);
   }
+
   return result;
 }
 

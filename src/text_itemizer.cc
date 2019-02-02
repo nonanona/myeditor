@@ -15,7 +15,7 @@ BidiResult resolveBidi(const std::vector<uint32_t>& code_points,
   // Fuck ICU API. They only accept UTF-16
   std::vector<uint16_t> utf16;
   for (int32_t i = range.start(); i < range.end(); ++i) {
-    utf16.push_back(static_cast<uint16_t>(code_points[i]));
+    utf16.push_back(static_cast<uint16_t>(code_points[i]));  // TODO: Surrogat pair support
   }
 
   UErrorCode status = U_ZERO_ERROR;

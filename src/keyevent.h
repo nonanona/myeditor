@@ -93,6 +93,6 @@ struct KeyEvent {
   NativeKeyEvent* key_event;
   KeySymbol keysym;
 
-  bool isModifier(Modifier key) const;
+  bool hasModifier(Modifier key) const;
   bool hasModifier() const;
 };

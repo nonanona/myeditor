@@ -18,6 +18,22 @@ class Range {
   uint32_t length() const { return end_ - start_; }
   bool empty() const { return start_ == end_; }
 
+  bool contains(uint32_t offset) const {
+    return start() <= offset && offset < end();
+  }
+
+  bool contains(const Range& r) const {
+    return start() <= r.start() && r.end() <= end();
+  }
+
+  bool intersect(const Range& r) const {
+    return start() < r.end() && r.start() < end();
+  }
+
+  Range intersection(const Range& r) const {
+    return Range(std::max(start(), r.start()), std::min(end(), r.end()));
+  }
+
  private:
   uint32_t start_;
   uint32_t end_;
